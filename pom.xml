@@ -4,7 +4,7 @@
     <groupId>com.github.cwdesautels</groupId>
     <artifactId>monads</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <name>monads</name>
     <url>https://github.com/cwdesautels/java-monads</url>
 
@@ -70,7 +70,6 @@
     </dependencies>
 
     <build>
-        <finalName>${project.artifactId}</finalName>
         <pluginManagement>
             <plugins>
                 <plugin>

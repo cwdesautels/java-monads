@@ -10,6 +10,6 @@ Make sure that both develop and master branches are up to date and clean.
 6. `mvn --batch-mode --update-snapshots jgitflow:release-finish -DscmCommentPrefix="[skip ci] Generated commit - " -DskipTests -DskipITs`
 7. `git checkout master`
 8. `git commit --allow-empty -m "[v$(cat .tag | cut -d- -f1)] Master build"`
-9. `git push --no-verify --tags`
-10. `git push --no-verify origin develop master`
-11. `git remote set-url origin git@github.com:cwdesautels/java-monads.git`
+9. `git remote set-url origin git@github.com:cwdesautels/java-monads.git`
+10. `git push --no-verify --tags`
+11. `git push --no-verify origin develop master`
