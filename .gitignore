@@ -3,3 +3,6 @@
 
 # Project artifacts
 target
+
+# Version
+.tag
