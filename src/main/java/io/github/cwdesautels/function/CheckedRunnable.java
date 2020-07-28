@@ -1,4 +1,4 @@
-package com.github.cwdesautels.functions;
+package io.github.cwdesautels.function;
 
 @FunctionalInterface
 public interface CheckedRunnable {

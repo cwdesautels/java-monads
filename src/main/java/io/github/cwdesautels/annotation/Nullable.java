@@ -1,4 +1,4 @@
-package com.github.cwdesautels.annotations;
+package io.github.cwdesautels.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

@@ -1,30 +1,30 @@
-package com.github.cwdesautels.monads;
+package io.github.cwdesautels.monad;
 
-import com.github.cwdesautels.annotations.Nullable;
+import io.github.cwdesautels.annotation.Nullable;
 import org.immutables.value.Value;
 
 import java.util.NoSuchElementException;
 
 @Value.Immutable
 @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-public interface Left<L, R> extends Either<L, R> {
+public interface Right<L, R> extends Either<L, R> {
+    @Override
+    @Nullable
+    R get();
+
     @Override
     @Value.Auxiliary
-    default R get() {
+    default L getLeft() {
         throw new NoSuchElementException();
     }
 
     @Override
-    @Nullable
-    L getLeft();
-
-    @Override
     default boolean isLeft() {
-        return true;
+        return false;
     }
 
     @Override
     default boolean isRight() {
-        return false;
+        return true;
     }
 }
