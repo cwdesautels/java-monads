@@ -1,5 +1,6 @@
 package com.github.cwdesautels.monads;
 
+import com.github.cwdesautels.functions.CheckedFunction;
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -37,10 +37,10 @@ public class TryTest {
     private Consumer<Throwable> errorConsumer;
 
     @Mock
-    private Function<Throwable, Object> recoveryFunction;
+    private CheckedFunction<Throwable, Object> recoveryFunction;
 
     @Mock
-    private Function<Throwable, Try<Object>> exchangeFunction;
+    private CheckedFunction<Throwable, Try<Object>> exchangeFunction;
 
     @Test
     public void successDoesNotSupportGetCause() {
@@ -341,7 +341,7 @@ public class TryTest {
     }
 
     @Test
-    public void recoverOnSuccess() {
+    public void recoverOnSuccess() throws Exception {
         // When
         Try.of(Object::new).recover(recoveryFunction);
         // Then
@@ -349,7 +349,7 @@ public class TryTest {
     }
 
     @Test
-    public void recoverOnFailure() {
+    public void recoverOnFailure() throws Exception {
         // Given
         final Exception error = new IOException();
         // When
@@ -359,7 +359,7 @@ public class TryTest {
     }
 
     @Test
-    public void exchangeOnSuccess() {
+    public void exchangeOnSuccess() throws Exception {
         // When
         Try.of(Object::new).exchange(exchangeFunction);
         // Then
@@ -367,7 +367,7 @@ public class TryTest {
     }
 
     @Test
-    public void exchangeOnFailure() {
+    public void exchangeOnFailure() throws Exception {
         // Given
         final Exception error = new IOException();
         // When

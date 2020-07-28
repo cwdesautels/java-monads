@@ -1,8 +1,5 @@
 package com.github.cwdesautels.monads;
 
-import org.immutables.value.Value;
-
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -162,56 +159,6 @@ public interface Either<L, R> {
             return Optional.ofNullable(get());
         } else {
             return Optional.empty();
-        }
-    }
-
-    // Inner classes
-
-    @Value.Immutable
-    @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-    interface Left<L, R> extends Either<L, R> {
-        @Override
-        @Value.Auxiliary
-        default R get() {
-            throw new NoSuchElementException();
-        }
-
-        @Override
-        @Nullable
-        L getLeft();
-
-        @Override
-        default boolean isLeft() {
-            return true;
-        }
-
-        @Override
-        default boolean isRight() {
-            return false;
-        }
-    }
-
-    @Value.Immutable
-    @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-    interface Right<L, R> extends Either<L, R> {
-        @Override
-        @Nullable
-        R get();
-
-        @Override
-        @Value.Auxiliary
-        default L getLeft() {
-            throw new NoSuchElementException();
-        }
-
-        @Override
-        default boolean isLeft() {
-            return false;
-        }
-
-        @Override
-        default boolean isRight() {
-            return true;
         }
     }
 }

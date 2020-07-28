@@ -1,4 +1,4 @@
-package com.github.cwdesautels.monads;
+package com.github.cwdesautels.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
