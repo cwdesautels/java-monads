@@ -1,7 +1,5 @@
 package com.github.cwdesautels.monads;
 
-import org.immutables.value.Value;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -184,55 +182,5 @@ public interface Try<T> {
     @FunctionalInterface
     interface CheckedSupplier<T> {
         T get() throws Exception;
-    }
-
-    // Inner classes
-
-    @Value.Immutable
-    @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-    interface Success<T> extends Try<T> {
-        @Override
-        @Nullable
-        T get();
-
-        @Override
-        @Value.Auxiliary
-        default Exception getCause() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        default boolean isSuccess() {
-            return true;
-        }
-
-        @Override
-        default boolean isFailure() {
-            return false;
-        }
-    }
-
-    @Value.Immutable
-    @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-    interface Failure<T> extends Try<T> {
-        @Override
-        @Value.Auxiliary
-        default T get() {
-            throw new RuntimeException(this.getCause());
-        }
-
-        @Override
-        @Nullable
-        Throwable getCause();
-
-        @Override
-        default boolean isSuccess() {
-            return false;
-        }
-
-        @Override
-        default boolean isFailure() {
-            return true;
-        }
     }
 }
