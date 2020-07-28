@@ -1,5 +1,8 @@
 package com.github.cwdesautels.monads;
 
+import com.github.cwdesautels.functions.CheckedRunnable;
+import com.github.cwdesautels.functions.CheckedSupplier;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -170,17 +173,5 @@ public interface Try<T> {
         } else {
             return Optional.empty();
         }
-    }
-
-    // Functional interfaces
-
-    @FunctionalInterface
-    interface CheckedRunnable {
-        void run() throws Exception;
-    }
-
-    @FunctionalInterface
-    interface CheckedSupplier<T> {
-        T get() throws Exception;
     }
 }
