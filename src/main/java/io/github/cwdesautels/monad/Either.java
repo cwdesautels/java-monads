@@ -1,4 +1,4 @@
-package io.github.cwdesautels.monads;
+package io.github.cwdesautels.monad;
 
 import java.util.Objects;
 import java.util.Optional;

@@ -1,8 +1,8 @@
-package io.github.cwdesautels.monads;
+package io.github.cwdesautels.monad;
 
-import io.github.cwdesautels.functions.CheckedFunction;
-import io.github.cwdesautels.functions.CheckedRunnable;
-import io.github.cwdesautels.functions.CheckedSupplier;
+import io.github.cwdesautels.function.CheckedFunction;
+import io.github.cwdesautels.function.CheckedRunnable;
+import io.github.cwdesautels.function.CheckedSupplier;
 
 import java.util.Objects;
 import java.util.Optional;
