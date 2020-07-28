@@ -5,8 +5,31 @@
     <artifactId>monads</artifactId>
     <packaging>jar</packaging>
     <version>1.1.2-SNAPSHOT</version>
-    <name>monads</name>
+    <packaging>jar</packaging>
+    <name>${project.groupId}:${project.artifactId}</name>
     <url>https://github.com/cwdesautels/java-monads</url>
+    <description>Opinionated Java monads</description>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Carl Desautels</name>
+            <email>carl.desautels@yahoo.com</email>
+            <organizationUrl>https://github.com/cwdesautels</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/cwdesautels/java-monads.git</connection>
+        <developerConnection>scm:git:ssh://github.com:cwdesautels/java-monads.git</developerConnection>
+        <url>https://github.com/cwdesautels/java-monads/tree/master/</url>
+    </scm>
 
     <properties>
         <!-- project configuration -->
