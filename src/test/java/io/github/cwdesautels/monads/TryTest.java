@@ -1,6 +1,6 @@
-package com.github.cwdesautels.monads;
+package io.github.cwdesautels.monads;
 
-import com.github.cwdesautels.functions.CheckedFunction;
+import io.github.cwdesautels.functions.CheckedFunction;
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

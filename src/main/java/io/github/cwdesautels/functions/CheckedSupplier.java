@@ -1,4 +1,4 @@
-package com.github.cwdesautels.functions;
+package io.github.cwdesautels.functions;
 
 @FunctionalInterface
 public interface CheckedSupplier<T> {

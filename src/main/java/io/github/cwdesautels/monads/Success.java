@@ -1,6 +1,6 @@
-package com.github.cwdesautels.monads;
+package io.github.cwdesautels.monads;
 
-import com.github.cwdesautels.annotations.Nullable;
+import io.github.cwdesautels.annotations.Nullable;
 import org.immutables.value.Value;
 
 @Value.Immutable
