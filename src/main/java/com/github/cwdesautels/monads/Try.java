@@ -1,5 +1,6 @@
 package com.github.cwdesautels.monads;
 
+import com.github.cwdesautels.functions.CheckedFunction;
 import com.github.cwdesautels.functions.CheckedRunnable;
 import com.github.cwdesautels.functions.CheckedSupplier;
 
@@ -61,21 +62,23 @@ public interface Try<T> {
 
     // Templates
 
-    default <R> Try<R> map(Function<T, R> function) {
+    default <R> Try<R> map(CheckedFunction<T, R> function) {
         Objects.requireNonNull(function);
 
         if (isSuccess()) {
-            return success(function.apply(get()));
+            return of(() -> function.apply(get()));
         } else {
             return failure(getCause());
         }
     }
 
-    default <R> Try<R> flatMap(Function<T, Try<R>> function) {
+    default <R> Try<R> flatMap(CheckedFunction<T, Try<R>> function) {
         Objects.requireNonNull(function);
 
         if (isSuccess()) {
-            return Objects.requireNonNull(function.apply(get()));
+            return of(() -> function.apply(get()))
+                    .map(Objects::requireNonNull)
+                    .map(Try::get);
         } else {
             return failure(getCause());
         }
@@ -129,33 +132,35 @@ public interface Try<T> {
         return this;
     }
 
-    default Try<T> recover(Function<Throwable, T> function) {
+    default Try<T> recover(CheckedFunction<Throwable, T> function) {
         return recoverWhen(t -> true, function);
     }
 
-    default Try<T> recoverWhen(Predicate<Throwable> predicate, Function<Throwable, T> function) {
+    default Try<T> recoverWhen(Predicate<Throwable> predicate, CheckedFunction<Throwable, T> function) {
         Objects.requireNonNull(predicate);
         Objects.requireNonNull(function);
 
         if (isSuccess() || !predicate.test(getCause())) {
             return this;
         } else {
-            return success(function.apply(getCause()));
+            return of(() -> function.apply(getCause()));
         }
     }
 
-    default Try<T> exchange(Function<Throwable, Try<T>> function) {
+    default Try<T> exchange(CheckedFunction<Throwable, Try<T>> function) {
         return exchangeWhen(t -> true, function);
     }
 
-    default Try<T> exchangeWhen(Predicate<Throwable> predicate, Function<Throwable, Try<T>> function) {
+    default Try<T> exchangeWhen(Predicate<Throwable> predicate, CheckedFunction<Throwable, Try<T>> function) {
         Objects.requireNonNull(predicate);
         Objects.requireNonNull(function);
 
         if (isSuccess() || !predicate.test(getCause())) {
             return this;
         } else {
-            return Objects.requireNonNull(function.apply(getCause()));
+            return of(() -> function.apply(getCause()))
+                    .map(Objects::requireNonNull)
+                    .map(Try::get);
         }
     }
 
