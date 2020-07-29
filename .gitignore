@@ -3,6 +3,7 @@
 
 # Project artifacts
 target
+release.properties
 
 # Version
 .tag
