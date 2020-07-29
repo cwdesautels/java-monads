@@ -45,21 +45,29 @@ public interface Either<L, R> {
 
     static <L, R> Either<L, R> right(R right) {
         return ImmutableRight.<L, R>builder()
-                .get(right)
+                .right(right)
                 .build();
     }
 
     // Behaviour
 
-    L getLeft();
+    L left();
 
-    R get();
+    R right();
 
     boolean isLeft();
 
     boolean isRight();
 
     // Templates
+
+    default L getLeft() {
+        return left();
+    }
+
+    default R get() {
+        return right();
+    }
 
     default R orElse(R other) {
         if (isRight()) {

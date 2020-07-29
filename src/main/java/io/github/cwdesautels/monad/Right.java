@@ -34,11 +34,11 @@ import java.util.NoSuchElementException;
 public interface Right<L, R> extends Either<L, R> {
     @Override
     @Nullable
-    R get();
+    R right();
 
     @Override
     @Value.Auxiliary
-    default L getLeft() {
+    default L left() {
         throw new NoSuchElementException();
     }
 
