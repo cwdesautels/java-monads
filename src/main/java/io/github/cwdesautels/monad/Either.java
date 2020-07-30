@@ -45,21 +45,29 @@ public interface Either<L, R> {
 
     static <L, R> Either<L, R> right(R right) {
         return ImmutableRight.<L, R>builder()
-                .get(right)
+                .right(right)
                 .build();
     }
 
     // Behaviour
 
-    L getLeft();
+    L left();
 
-    R get();
+    R right();
 
     boolean isLeft();
 
     boolean isRight();
 
     // Templates
+
+    default L getLeft() {
+        return left();
+    }
+
+    default R get() {
+        return right();
+    }
 
     default R orElse(R other) {
         if (isRight()) {
@@ -96,6 +104,17 @@ public interface Either<L, R> {
             throw supplier.get();
         } else {
             return get();
+        }
+    }
+
+    default <T> T fold(Function<L, T> leftMapper, Function<R, T> rightMapper) {
+        Objects.requireNonNull(leftMapper);
+        Objects.requireNonNull(rightMapper);
+
+        if (isRight()) {
+            return rightMapper.apply(get());
+        } else {
+            return leftMapper.apply(getLeft());
         }
     }
 
@@ -144,17 +163,6 @@ public interface Either<L, R> {
             return Objects.requireNonNull(function.apply(getLeft()));
         } else {
             return right(get());
-        }
-    }
-
-    default <T> T fold(Function<L, T> leftMapper, Function<R, T> rightMapper) {
-        Objects.requireNonNull(leftMapper);
-        Objects.requireNonNull(rightMapper);
-
-        if (isRight()) {
-            return rightMapper.apply(get());
-        } else {
-            return leftMapper.apply(getLeft());
         }
     }
 
