@@ -24,421 +24,452 @@
 
 package io.github.cwdesautels.monad;
 
-import com.google.common.collect.ImmutableList;
-import io.github.cwdesautels.function.CheckedFunction;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.ConcurrentModificationException;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 
+import static io.github.cwdesautels.monad.Either.left;
+import static io.github.cwdesautels.monad.Either.right;
+import static io.github.cwdesautels.monad.Try.failure;
+import static io.github.cwdesautels.monad.Try.of;
+import static io.github.cwdesautels.monad.Try.ofRunnable;
+import static io.github.cwdesautels.monad.Try.success;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@ExtendWith(MockitoExtension.class)
-public class TryTest {
-    @Mock
-    private Consumer<Object> consumer;
-
-    @Mock
-    private Consumer<Throwable> errorConsumer;
-
-    @Mock
-    private CheckedFunction<Throwable, Object> recoveryFunction;
-
-    @Mock
-    private CheckedFunction<Throwable, Try<Object>> exchangeFunction;
-
+class TryTest {
     @Test
-    public void successDoesNotSupportGetCause() {
-        // Then
-        assertThrows(UnsupportedOperationException.class, () -> Try.success(new Object()).getCause());
-    }
+    void shallSupportEqualityAmongstSuccess() {
+        // Given
+        final Try<Object> a = success(1);
+        final Try<Object> b = success(1);
+        final Try<Object> c = success(2);
 
-    @Test
-    public void failurePropagatesCauseOnGet() {
-        // Then
-        assertThrows(RuntimeException.class, () -> Try.failure(new IOException("Operation Failed!")).get());
-    }
-
-    @Test
-    public void successAcceptsNull() {
-        // When
-        final Try<Void> actual = Try.success(null);
-        // Then
-        assertTrue(actual.isSuccess());
-        assertFalse(actual.isFailure());
-        assertNull(actual.get());
-    }
-
-    @Test
-    public void failureAcceptsNull() {
-        // When
-        final Try<Void> actual = Try.failure(null);
-        // Then
-        assertFalse(actual.isSuccess());
-        assertTrue(actual.isFailure());
-        assertNull(actual.getCause());
-    }
-
-    @Test
-    public void successEqualityBasedOnValue() {
-        // When
-        final Try<Object> a = Try.success(1);
-        final Try<Object> b = Try.success(1);
-        final Try<Object> c = Try.success(2);
-        // Then
-        // Symmetric
+        // Then assert symmetric equality
         assertEquals(a, b);
         assertEquals(b, a);
-        // Reflexive
+        assertEquals(a.hashCode(), b.hashCode());
+
+        // Then assert reflexive equality
         assertEquals(a, a);
-        // Transitive
+
+        // Then assert transitive equality
         assertNotEquals(a, c);
         assertNotEquals(b, c);
-        // Hashcode obligations
-        assertEquals(a.hashCode(), b.hashCode());
     }
 
     @Test
-    public void failuresEqualityBasedOnValue() {
+    void shallSupportEqualityAmongstFailure() {
         // When
         final IOException error = new IOException();
-        final Try<Object> a = Try.failure(error);
-        final Try<Object> b = Try.failure(error);
-        final Try<Object> c = Try.failure(new ConcurrentModificationException());
-        // Then
-        // Symmetric
+        final Try<Object> a = failure(error);
+        final Try<Object> b = failure(error);
+        final Try<Object> c = failure(new ConcurrentModificationException());
+
+        // Then assert symmetric equality
         assertEquals(a, b);
         assertEquals(b, a);
-        // Reflexive
+        assertEquals(a.hashCode(), b.hashCode());
+
+        // Then assert reflexive equality
         assertEquals(a, a);
-        // Transitive
+
+        // Then assert transitive equality
         assertNotEquals(a, c);
         assertNotEquals(b, c);
-        // Hashcode obligations
-        assertEquals(a.hashCode(), b.hashCode());
     }
 
     @Test
-    public void ofHandlesEmptyResult() {
+    void shallReturnSuccess() {
         // Given
-        final Try<Object> expected = Try.success(null);
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+
         // When
-        final Try<Object> actual = Try.of(() -> null);
+        final Try<UUID> actual = success(value);
+
         // Then
         assertTrue(actual.isSuccess());
         assertFalse(actual.isFailure());
-        assertNull(actual.get());
         assertEquals(expected, actual);
+        assertSame(expected.get(), actual.get());
+        assertThrows(UnsupportedOperationException.class, actual::getCause);
     }
 
     @Test
-    public void ofHandlesResult() {
+    void shallReturnFailure() {
         // Given
-        final UUID result = UUID.randomUUID();
-        final Try<Object> expected = Try.success(result);
+        final Exception value = new IOException("I broke :(");
+        final Try<UUID> expected = failure(value);
+
         // When
-        final Try<Object> actual = Try.of(() -> result);
+        final Try<UUID> actual = failure(value);
+
+        // Then
+        assertFalse(actual.isSuccess());
+        assertTrue(actual.isFailure());
+        assertEquals(expected, actual);
+        assertSame(expected.getCause(), actual.getCause());
+        assertThrows(RuntimeException.class, actual::get);
+    }
+
+    @Test
+    void shallReturnSuccessFromSupplier() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+
+        // When
+        final Try<UUID> actual = of(() -> value);
+
         // Then
         assertTrue(actual.isSuccess());
         assertFalse(actual.isFailure());
-        assertSame(result, actual.get());
         assertEquals(expected, actual);
+        assertSame(expected.get(), actual.get());
+        assertThrows(UnsupportedOperationException.class, actual::getCause);
     }
 
     @Test
-    public void ofRunnableHandlesResult() {
+    void shallReturnErrorFromSupplier() {
         // Given
-        final Try<Object> expected = Try.success(null);
+        final Exception value = new IOException("I broke :(");
+        final Try<UUID> expected = failure(value);
+
         // When
-        final Try<Void> actual = Try.ofRunnable(() -> {
+        final Try<UUID> actual = of(() -> {
+            throw value;
         });
+
         // Then
-        assertTrue(actual.isSuccess());
-        assertFalse(actual.isFailure());
-        assertNull(actual.get());
+        assertFalse(actual.isSuccess());
+        assertTrue(actual.isFailure());
         assertEquals(expected, actual);
+        assertSame(expected.getCause(), actual.getCause());
+        assertThrows(RuntimeException.class, actual::get);
     }
 
     @Test
-    public void ofHandlesError() {
+    void shallReturnSuccessFromRunnable() {
         // Given
-        final Exception error = new RuntimeException("Operation Failed!");
-        final Try<Object> expected = Try.failure(error);
+        final Try<Void> expected = success(null);
+
         // When
-        final Try<Object> actual = Try.of(() -> {
-            throw error;
+        final Try<Void> actual = ofRunnable(() -> {
         });
+
         // Then
-        assertFalse(actual.isSuccess());
-        assertTrue(actual.isFailure());
-        assertSame(error, actual.getCause());
+        assertTrue(actual.isSuccess());
+        assertFalse(actual.isFailure());
         assertEquals(expected, actual);
+        assertSame(expected.get(), actual.get());
+        assertThrows(UnsupportedOperationException.class, actual::getCause);
     }
 
     @Test
-    public void ofRunnableHandlesError() {
+    void shallReturnErrorFromRunnable() {
         // Given
-        final RuntimeException error = new RuntimeException("Operation Failed!");
-        final Try<Object> expected = Try.failure(error);
+        final Exception value = new IOException("I broke :(");
+        final Try<Void> expected = failure(value);
+
         // When
-        final Try<Void> actual = Try.ofRunnable(() -> {
-            throw error;
+        final Try<Void> actual = ofRunnable(() -> {
+            throw value;
         });
-        // Then
-        assertFalse(actual.isSuccess());
-        assertTrue(actual.isFailure());
-        assertSame(error, actual.getCause());
-        assertEquals(expected, actual);
-    }
 
-    @Test
-    public void mapOnSuccess() {
-        // Given
-        final Object result = new Object();
-        final Try<List<Object>> expected = Try.success(Collections.singletonList(result));
-        // When
-        final Try<List<Object>> actual = Try.of(() -> result).map(ImmutableList::of);
-        // Then
-        assertTrue(actual.isSuccess());
-        assertFalse(actual.isFailure());
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void mapOnFailure() {
-        // Given
-        final Exception result = new IOException();
-        final Try<List<Object>> expected = Try.failure(result);
-        // When
-        final Try<List<Object>> actual = Try.of(() -> {
-            throw result;
-        }).map(ImmutableList::of);
         // Then
         assertFalse(actual.isSuccess());
         assertTrue(actual.isFailure());
         assertEquals(expected, actual);
+        assertSame(expected.getCause(), actual.getCause());
+        assertThrows(RuntimeException.class, actual::get);
     }
 
-    @Test
-    public void flatMapOnSuccess() {
-        // Given
-        final Object result = new Object();
-        final Try<List<Object>> expected = Try.success(Collections.singletonList(result));
-        // When
-        final Try<List<Object>> actual = Try.of(() -> result).map(ImmutableList::of).flatMap(Try::success);
-        // Then
-        assertTrue(actual.isSuccess());
-        assertFalse(actual.isFailure());
-        assertEquals(expected, actual);
-    }
 
     @Test
-    public void flatMapOnFailure() {
+    void shallMapWhenSuccess() {
         // Given
-        final Exception result = new IOException();
-        final Try<List<Object>> expected = Try.failure(result);
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
         // When
-        final Try<List<Object>> actual = Try.of(() -> {
-            throw result;
-        }).map(ImmutableList::of).flatMap(Try::success);
-        // Then
-        assertFalse(actual.isSuccess());
-        assertTrue(actual.isFailure());
-        assertEquals(expected, actual);
-    }
+        final Try<UUID> actual = success(randomUUID()).map(random -> value);
 
-    @Test
-    public void orElseOnSuccess() {
-        // Given
-        final Object expected = 1;
-        // When
-        final Object actual = Try.of(() -> 1).orElse(2);
         // Then
         assertEquals(expected, actual);
     }
 
     @Test
-    public void orElseOnFailure() {
+    void shallNotMapWhenFailure() {
         // Given
-        final Object expected = 1;
+        final Exception value = new IOException("I broke :(");
+        final Try<Object> expected = failure(value);
+
         // When
-        final Object actual = Try.of(() -> {
-            throw new IOException();
-        }).orElse(1);
+        final Try<Object> actual = failure(value).map(uuid -> randomUUID());
+
         // Then
         assertEquals(expected, actual);
     }
 
     @Test
-    public void orElseGetOnSuccess() {
+    void shallFlatMapWhenSuccess() {
         // Given
-        final Object expected = 1;
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+
         // When
-        final Object actual = Try.of(() -> 1).orElseGet(() -> 2);
+        final Try<UUID> actual = success(randomUUID()).flatMap(random -> success(value));
+
         // Then
         assertEquals(expected, actual);
     }
 
     @Test
-    public void orElseGetOnFailure() {
+    void shallNotFlatMapWhenFailure() {
         // Given
-        final Object expected = 1;
+        final Exception value = new IOException("I broke :(");
+        final Try<UUID> expected = failure(value);
+
         // When
-        final Object actual = Try.of(() -> {
-            throw new IOException();
-        }).orElseGet(() -> 1);
+        final Try<UUID> actual = failure(value).flatMap(uuid -> success(randomUUID()));
+
         // Then
         assertEquals(expected, actual);
     }
 
     @Test
-    public void orElseThrowOnSuccess() throws IOException {
+    void shallReturnSuccessWhenSuccessOrElse() {
         // Given
-        final Object expected = 1;
+        final UUID expected = randomUUID();
+
         // When
-        final Object actual = Try.of(() -> 1).orElseThrow(IOException::new);
+        final UUID actual = success(expected).orElse(randomUUID());
+
         // Then
         assertEquals(expected, actual);
     }
 
     @Test
-    public void orElseThrowOnFailure() throws IOException {
-        // Then
-        assertThrows(IOException.class, () -> Try.of(() -> {
-            throw new IOException();
-        }).orElseThrow(IOException::new));
-    }
-
-    @Test
-    public void ifSuccessOnSuccess() {
+    void shallReturnValueWhenFailureOrElse() {
         // Given
-        final Try<Object> monad = Try.of(() -> 1);
-        // When
-        monad.ifSuccess(consumer);
-        // Then
-        verify(consumer, times(1)).accept(1);
-    }
+        final UUID expected = randomUUID();
 
-    @Test
-    public void ifSuccessOnFailure() {
         // When
-        Try.failure(new IOException()).ifSuccess(consumer);
-        // Then
-        verify(consumer, never()).accept(any());
-    }
+        final UUID actual = Try.<UUID>failure(new IOException("I broke :(")).orElse(expected);
 
-    @Test
-    public void ifFailureOnSuccess() {
-        // When
-        Try.of(() -> 1).ifFailure(errorConsumer);
-        // Then
-        verify(errorConsumer, never()).accept(any());
-    }
-
-    @Test
-    public void ifFailureOnFailure() {
-        // Given
-        final Exception error = new IOException();
-        // When
-        Try.failure(error).ifFailure(errorConsumer);
-        // Then
-        verify(errorConsumer, times(1)).accept(error);
-    }
-
-    @Test
-    public void recoverOnSuccess() throws Exception {
-        // When
-        Try.of(Object::new).recover(recoveryFunction);
-        // Then
-        verify(recoveryFunction, never()).apply(any());
-    }
-
-    @Test
-    public void recoverOnFailure() throws Exception {
-        // Given
-        final Exception error = new IOException();
-        // When
-        Try.failure(error).recover(recoveryFunction);
-        // Then
-        verify(recoveryFunction, times(1)).apply(error);
-    }
-
-    @Test
-    public void exchangeOnSuccess() throws Exception {
-        // When
-        Try.of(Object::new).exchange(exchangeFunction);
-        // Then
-        verify(exchangeFunction, never()).apply(any());
-    }
-
-    @Test
-    public void exchangeOnFailure() throws Exception {
-        // Given
-        final Exception error = new IOException();
-        // When
-        when(exchangeFunction.apply(error)).thenReturn(Try.success(true));
-        Try.failure(error).exchange(exchangeFunction);
-        // Then
-        verify(exchangeFunction, times(1)).apply(error);
-    }
-
-    @Test
-    public void toOptionalOnSuccess() {
-        // Given
-        final Optional<Boolean> expected = Optional.of(true);
-        // When
-        final Optional<Boolean> actual = Try.of(() -> true).toOptional();
         // Then
         assertEquals(expected, actual);
     }
 
     @Test
-    public void toOptionalOnFailure() {
+    void shallReturnSuccessWhenSuccessOrElseGet() {
         // Given
-        final Optional<Boolean> expected = Optional.empty();
-        // When
-        final Try<Boolean> actual = Try.failure(new IOException());
-        // Then
-        assertEquals(expected, actual.toOptional());
-    }
+        final UUID expected = randomUUID();
 
-    @Test
-    public void toEitherOnSuccess() {
-        // Given
-        final Either<Throwable, Boolean> expected = Either.right(true);
         // When
-        final Either<Throwable, Boolean> actual = Try.of(() -> true).toEither();
+        final UUID actual = success(expected).orElseGet(UUID::randomUUID);
+
         // Then
         assertEquals(expected, actual);
     }
 
     @Test
-    public void toEitherOnFailure() {
+    void shallReturnSuccessWhenFailureOrElseGet() {
         // Given
-        final Exception error = new IOException();
-        final Either<Throwable, Boolean> expected = Either.left(error);
+        final UUID expected = randomUUID();
+
         // When
-        final Try<Boolean> actual = Try.failure(error);
+        final UUID actual = Try.<UUID>failure(new IOException("I broke :(")).orElseGet(() -> expected);
+
         // Then
-        assertEquals(expected, actual.toEither());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallReturnSuccessWhenRightOrElseThrow() {
+        // Given
+        final UUID expected = randomUUID();
+
+        // When
+        final UUID actual = success(expected).orElseThrow(IllegalStateException::new);
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallReturnValueWhenFailureOrElseThrow() {
+        // Given
+        final IllegalStateException expected = new IllegalStateException();
+
+        // When
+        final Try<UUID> actual = failure(new IOException("I broke :("));
+
+        // Then
+        assertThrows(expected.getClass(), () -> actual.orElseThrow(uuid -> expected));
+    }
+
+
+    @Test
+    void shallConsumerSuccess() {
+        // Given
+        final UUID expected = randomUUID();
+
+        // Then
+        success(expected)
+                .ifFailure(actual -> fail())
+                .ifSuccess(actual -> assertEquals(expected, actual));
+    }
+
+    @Test
+    void shallConsumerFailure() {
+        // Given
+        final Exception expected = new IOException("I broke :(");
+
+        // Then
+        Try.<UUID>failure(expected)
+                .ifSuccess(actual -> fail())
+                .ifFailure(actual -> assertEquals(expected, actual));
+    }
+
+    @Test
+    void shallIgnoreRecoverWhenSuccess() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+        // When
+        final Try<UUID> actual = success(value).recover(error -> randomUUID());
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallRecoverWhenFailure() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+
+        // When
+        final Try<UUID> actual = Try.<UUID>failure(new IOException("I broke :(")).recover(error -> value);
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallIgnoreRecoverWhenFailureMismatch() {
+        // Given
+        final Exception value = new IOException("I broke :(");
+        final Try<UUID> expected = failure(value);
+
+        // When
+        final Try<UUID> actual = Try.<UUID>failure(value)
+                .recoverWhen(error -> false, error -> randomUUID());
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallIgnoreExchangeWhenSuccess() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+        // When
+        final Try<UUID> actual = success(value).exchange(error -> success(randomUUID()));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallExchangeWhenFailure() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+
+        // When
+        final Try<UUID> actual = Try.<UUID>failure(new IOException("I broke :(")).exchange(error -> success(value));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallIgnoreExchangeWhenFailureMismatch() {
+        // Given
+        final Exception value = new IOException("I broke :(");
+        final Try<UUID> expected = failure(value);
+
+        // When
+        final Try<UUID> actual = Try.<UUID>failure(value)
+                .exchangeWhen(error -> false, error -> success(randomUUID()));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallCollapseSuccessToEither() {
+        // Given
+        final UUID value = randomUUID();
+        final Either<Throwable, UUID> expected = right(value);
+
+        // When
+        final Either<Throwable, UUID> actual = success(value).toEither();
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallCollapseFailureToEither() {
+        // Given
+        final Exception value = new IOException("I broke :(");
+        final Either<Throwable, UUID> expected = left(value);
+
+        // When
+        final Either<Throwable, UUID> actual = Try.<UUID>failure(value).toEither();
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallCollapseSuccessToOptional() {
+        // Given
+        final UUID value = randomUUID();
+        final Optional<UUID> expected = of(value);
+
+        // When
+        final Optional<UUID> actual = success(value).toOptional();
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallCollapseFailureToEmptyOptional() {
+        // Given
+        final Exception value = new IOException("I broke :(");
+        final Optional<UUID> expected = empty();
+
+        // When
+        final Optional<UUID> actual = Try.<UUID>failure(value).toOptional();
+
+        // Then
+        assertEquals(expected, actual);
     }
 }

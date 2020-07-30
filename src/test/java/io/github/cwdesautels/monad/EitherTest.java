@@ -29,11 +29,13 @@ import org.junit.jupiter.api.Test;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
 
 import static io.github.cwdesautels.monad.Either.left;
 import static io.github.cwdesautels.monad.Either.right;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.UUID.randomUUID;
+import static java.util.function.Function.identity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -42,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class EitherTest {
+class EitherTest {
     @Test
     void shallSupportEqualityAmongstLeft() {
         // Given
@@ -207,7 +209,7 @@ public class EitherTest {
         final IllegalStateException expected = new IllegalStateException();
 
         // When
-        final Either<UUID, UUID> actual = Either.left(randomUUID());
+        final Either<UUID, UUID> actual = left(randomUUID());
 
         // Then
         assertThrows(expected.getClass(), () -> actual.orElseThrow(() -> expected));
@@ -356,7 +358,7 @@ public class EitherTest {
         final UUID expected = randomUUID();
 
         // When
-        final UUID actual = Either.<UUID, UUID>right(randomUUID()).fold(Function.identity(), random -> expected);
+        final UUID actual = Either.<UUID, UUID>right(randomUUID()).fold(identity(), random -> expected);
 
         // Then
         assertEquals(expected, actual);
@@ -368,7 +370,7 @@ public class EitherTest {
         final UUID expected = randomUUID();
 
         // When
-        final UUID actual = Either.<UUID, UUID>left(randomUUID()).fold(random -> expected, Function.identity());
+        final UUID actual = Either.<UUID, UUID>left(randomUUID()).fold(random -> expected, identity());
 
         // Then
         assertEquals(expected, actual);
@@ -400,7 +402,7 @@ public class EitherTest {
     void shallCollapseRightToOptional() {
         // Given
         final UUID value = randomUUID();
-        final Optional<UUID> expected = Optional.of(value);
+        final Optional<UUID> expected = of(value);
 
         // When
         final Optional<UUID> actual = right(value).toOptional();
@@ -413,7 +415,7 @@ public class EitherTest {
     void shallCollapseLeftToEmptyOptional() {
         // Given
         final UUID value = randomUUID();
-        final Optional<UUID> expected = Optional.empty();
+        final Optional<UUID> expected = empty();
 
         // When
         final Optional<UUID> actual = Either.<UUID, UUID>left(value).toOptional();
