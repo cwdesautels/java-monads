@@ -25,11 +25,11 @@
 package io.github.cwdesautels.monad;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static io.github.cwdesautels.monad.Either.left;
 import static io.github.cwdesautels.monad.Either.right;
@@ -40,21 +40,15 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@ExtendWith(MockitoExtension.class)
 public class EitherTest {
     @Test
     void shallSupportEqualityAmongstLeft() {
         // Given
-        final Either<UUID, UUID> a = ImmutableLeft.<UUID, UUID>builder()
-                .left(randomUUID())
-                .build();
-        final Either<UUID, UUID> b = ImmutableLeft.<UUID, UUID>builder()
-                .left(a.getLeft())
-                .build();
-        final Either<UUID, UUID> c = ImmutableLeft.<UUID, UUID>builder()
-                .left(randomUUID())
-                .build();
+        final Either<UUID, UUID> a = left(randomUUID());
+        final Either<UUID, UUID> b = left(a.left());
+        final Either<UUID, UUID> c = left(randomUUID());
 
         // Then assert symmetric equality
         assertEquals(a, b);
@@ -72,15 +66,9 @@ public class EitherTest {
     @Test
     void shallSupportEqualityAmongstRight() {
         // Given
-        final Either<UUID, UUID> a = ImmutableRight.<UUID, UUID>builder()
-                .right(randomUUID())
-                .build();
-        final Either<UUID, UUID> b = ImmutableRight.<UUID, UUID>builder()
-                .right(a.get())
-                .build();
-        final Either<UUID, UUID> c = ImmutableRight.<UUID, UUID>builder()
-                .right(randomUUID())
-                .build();
+        final Either<UUID, UUID> a = right(randomUUID());
+        final Either<UUID, UUID> b = right(a.right());
+        final Either<UUID, UUID> c = right(randomUUID());
 
         // Then assert symmetric equality
         assertEquals(a, b);
@@ -99,9 +87,7 @@ public class EitherTest {
     void shallReturnLeft() {
         // Given
         final UUID value = randomUUID();
-        final Either<UUID, UUID> expected = ImmutableLeft.<UUID, UUID>builder()
-                .left(value)
-                .build();
+        final Either<UUID, UUID> expected = left(value);
 
         // When
         final Either<UUID, UUID> actual = left(value);
@@ -118,9 +104,7 @@ public class EitherTest {
     void shallReturnRight() {
         // Given
         final UUID value = randomUUID();
-        final Either<UUID, UUID> expected = ImmutableRight.<UUID, UUID>builder()
-                .right(value)
-                .build();
+        final Either<UUID, UUID> expected = right(value);
 
         // When
         final Either<UUID, UUID> actual = right(value);
@@ -230,12 +214,10 @@ public class EitherTest {
     }
 
     @Test
-    void shallSwapValues() {
+    void shallSwapLeftToRight() {
         // Given
         final UUID value = randomUUID();
-        final Either<UUID, UUID> expected = ImmutableLeft.<UUID, UUID>builder()
-                .left(value)
-                .build();
+        final Either<UUID, UUID> expected = left(value);
 
         // When
         final Either<UUID, UUID> actual = Either.<UUID, UUID>right(value).swap();
@@ -249,13 +231,27 @@ public class EitherTest {
     }
 
     @Test
+    void shallSwapRightToLeft() {
+        // Given
+        final UUID value = randomUUID();
+        final Either<UUID, UUID> expected = right(value);
+
+        // When
+        final Either<UUID, UUID> actual = Either.<UUID, UUID>left(value).swap();
+
+        // Then
+        assertTrue(actual.isRight());
+        assertFalse(actual.isLeft());
+        assertEquals(expected, actual);
+        assertSame(expected.get(), actual.get());
+        assertThrows(NoSuchElementException.class, actual::getLeft);
+    }
+
+    @Test
     void shallMapWhenRight() {
         // Given
         final UUID value = randomUUID();
-        final Either<UUID, UUID> expected = ImmutableRight.<UUID, UUID>builder()
-                .right(value)
-                .build();
-
+        final Either<UUID, UUID> expected = right(value);
         // When
         final Either<UUID, UUID> actual = Either.<UUID, UUID>right(randomUUID()).map(random -> value);
 
@@ -267,9 +263,7 @@ public class EitherTest {
     void shallNotMapWhenLeft() {
         // Given
         final UUID value = randomUUID();
-        final Either<UUID, UUID> expected = ImmutableLeft.<UUID, UUID>builder()
-                .left(value)
-                .build();
+        final Either<UUID, UUID> expected = left(value);
 
         // When
         final Either<UUID, UUID> actual = Either.<UUID, UUID>left(value).map(uuid -> randomUUID());
@@ -282,9 +276,7 @@ public class EitherTest {
     void shallFlatMapWhenRight() {
         // Given
         final UUID value = randomUUID();
-        final Either<UUID, UUID> expected = ImmutableLeft.<UUID, UUID>builder()
-                .left(value)
-                .build();
+        final Either<UUID, UUID> expected = left(value);
 
         // When
         final Either<UUID, UUID> actual = Either.<UUID, UUID>right(randomUUID()).flatMap(random -> left(value));
@@ -297,12 +289,134 @@ public class EitherTest {
     void shallNotFlatMapWhenLeft() {
         // Given
         final UUID value = randomUUID();
-        final Either<UUID, UUID> expected = ImmutableLeft.<UUID, UUID>builder()
-                .left(value)
-                .build();
+        final Either<UUID, UUID> expected = left(value);
 
         // When
         final Either<UUID, UUID> actual = Either.<UUID, UUID>left(value).flatMap(uuid -> right(randomUUID()));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallMapLeftWhenLeft() {
+        // Given
+        final UUID value = randomUUID();
+        final Either<UUID, UUID> expected = left(value);
+
+        // When
+        final Either<UUID, UUID> actual = Either.<UUID, UUID>left(randomUUID()).mapLeft(random -> value);
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallNotMapLeftWhenRight() {
+        // Given
+        final UUID value = randomUUID();
+        final Either<UUID, UUID> expected = right(value);
+
+        // When
+        final Either<UUID, UUID> actual = Either.<UUID, UUID>right(value).mapLeft(uuid -> randomUUID());
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallFlatMapLeftWhenLeft() {
+        // Given
+        final UUID value = randomUUID();
+        final Either<UUID, UUID> expected = right(value);
+
+        // When
+        final Either<UUID, UUID> actual = Either.<UUID, UUID>left(randomUUID()).flatMapLeft(random -> right(value));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallNotFlatMapLeftWhenRight() {
+        // Given
+        final UUID value = randomUUID();
+        final Either<UUID, UUID> expected = right(value);
+
+        // When
+        final Either<UUID, UUID> actual = Either.<UUID, UUID>right(value).flatMapLeft(uuid -> left(randomUUID()));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallFoldRightWhenRight() {
+        // Given
+        final UUID expected = randomUUID();
+
+        // When
+        final UUID actual = Either.<UUID, UUID>right(randomUUID()).fold(Function.identity(), random -> expected);
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallFoldLeftWhenLeft() {
+        // Given
+        final UUID expected = randomUUID();
+
+        // When
+        final UUID actual = Either.<UUID, UUID>left(randomUUID()).fold(random -> expected, Function.identity());
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallConsumerRightWhenRight() {
+        // Given
+        final UUID expected = randomUUID();
+
+        // Then
+        Either.<UUID, UUID>right(expected)
+                .ifLeft(actual -> fail())
+                .ifRight(actual -> assertEquals(expected, actual));
+    }
+
+    @Test
+    void shallConsumerLeftWhenLeft() {
+        // Given
+        final UUID expected = randomUUID();
+
+        // Then
+        Either.<UUID, UUID>left(expected)
+                .ifRight(actual -> fail())
+                .ifLeft(actual -> assertEquals(expected, actual));
+    }
+
+    @Test
+    void shallCollapseRightToOptional() {
+        // Given
+        final UUID value = randomUUID();
+        final Optional<UUID> expected = Optional.of(value);
+
+        // When
+        final Optional<UUID> actual = right(value).toOptional();
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallCollapseLeftToEmptyOptional() {
+        // Given
+        final UUID value = randomUUID();
+        final Optional<UUID> expected = Optional.empty();
+
+        // When
+        final Optional<UUID> actual = Either.<UUID, UUID>left(value).toOptional();
 
         // Then
         assertEquals(expected, actual);

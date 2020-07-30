@@ -107,6 +107,17 @@ public interface Either<L, R> {
         }
     }
 
+    default <T> T fold(Function<L, T> leftMapper, Function<R, T> rightMapper) {
+        Objects.requireNonNull(leftMapper);
+        Objects.requireNonNull(rightMapper);
+
+        if (isRight()) {
+            return rightMapper.apply(get());
+        } else {
+            return leftMapper.apply(getLeft());
+        }
+    }
+
     default Either<R, L> swap() {
         if (isRight()) {
             return left(get());
@@ -152,17 +163,6 @@ public interface Either<L, R> {
             return Objects.requireNonNull(function.apply(getLeft()));
         } else {
             return right(get());
-        }
-    }
-
-    default <T> T fold(Function<L, T> leftMapper, Function<R, T> rightMapper) {
-        Objects.requireNonNull(leftMapper);
-        Objects.requireNonNull(rightMapper);
-
-        if (isRight()) {
-            return rightMapper.apply(get());
-        } else {
-            return leftMapper.apply(getLeft());
         }
     }
 
