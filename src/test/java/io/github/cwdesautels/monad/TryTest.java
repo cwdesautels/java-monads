@@ -344,6 +344,84 @@ class TryTest {
     }
 
     @Test
+    void shallIgnoreRecoverWhenSuccess() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+        // When
+        final Try<UUID> actual = success(value).recover(error -> randomUUID());
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallRecoverWhenFailure() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+
+        // When
+        final Try<UUID> actual = Try.<UUID>failure(new IOException("I broke :(")).recover(error -> value);
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallIgnoreRecoverWhenFailureMismatch() {
+        // Given
+        final Exception value = new IOException("I broke :(");
+        final Try<UUID> expected = failure(value);
+
+        // When
+        final Try<UUID> actual = Try.<UUID>failure(value)
+                .recoverWhen(error -> false, error -> randomUUID());
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallIgnoreExchangeWhenSuccess() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+        // When
+        final Try<UUID> actual = success(value).exchange(error -> success(randomUUID()));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallExchangeWhenFailure() {
+        // Given
+        final UUID value = randomUUID();
+        final Try<UUID> expected = success(value);
+
+        // When
+        final Try<UUID> actual = Try.<UUID>failure(new IOException("I broke :(")).exchange(error -> success(value));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void shallIgnoreExchangeWhenFailureMismatch() {
+        // Given
+        final Exception value = new IOException("I broke :(");
+        final Try<UUID> expected = failure(value);
+
+        // When
+        final Try<UUID> actual = Try.<UUID>failure(value)
+                .exchangeWhen(error -> false, error -> success(randomUUID()));
+
+        // Then
+        assertEquals(expected, actual);
+    }
+
+    @Test
     void shallCollapseSuccessToEither() {
         // Given
         final UUID value = randomUUID();
